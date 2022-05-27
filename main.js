@@ -20,6 +20,7 @@ const paragraphs = JSON.parse(require('fs').readFileSync('paragraphs.json')).map
     }
 });
 const jythonCooldown = paragraphs.reduce((accumulator, item, index) => (index in [0, paragraphs.length - 1]) ? 0 : accumulator + item.readingTime, 0);
+const birthday = new Date(1991, 5, 27, 13, 0, 0, 0);
 let jythonWorks = true;
 client.connect();
 
@@ -46,6 +47,25 @@ client.on('message', (channel, context, message, self) => {
                         jythonWorks = true;
                     }, jythonCooldown);
                 }
+                break;
+
+            case 'age':
+                const difference = new Date() - birthday;
+                let seconds = Math.floor(difference / 1000),
+                    minutes = Math.floor(seconds / 60),
+                    hours = Math.floor(minutes / 60),
+                    days = Math.floor(hours / 24),
+                    months = Math.floor(days / 30),
+                    years = Math.floor(days / 365);
+
+                hours %= 24;
+                days %= 30;
+                months %= 12;
+
+                client.say(
+                    channel,
+                    `Years: ${years}${months ? `, month: ${months}` : ''}${days ? `, days: ${days}` : ''}${hours ? `, hours: ${hours}` : ''}`
+                );
                 break;
         }
     }
