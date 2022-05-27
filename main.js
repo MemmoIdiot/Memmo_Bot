@@ -2,6 +2,9 @@
 
 require('dotenv').config();
 
+const moment = require('moment');
+require('moment-precise-range-plugin');
+
 const client = new require('tmi.js').Client({
     connection: {
         reconnect: true
@@ -20,7 +23,7 @@ const paragraphs = JSON.parse(require('fs').readFileSync('paragraphs.json')).map
     }
 });
 const jythonCooldown = paragraphs.reduce((accumulator, item, index) => (index in [0, paragraphs.length - 1]) ? 0 : accumulator + item.readingTime, 0);
-const birthday = new Date(1991, 5, 27, 13, 0, 0, 0);
+const birthday = moment('1991-05-27 13:00:00'); // new Date(1991, 5, 27, 13, 0, 0, 0);
 let jythonWorks = true;
 client.connect();
 
@@ -50,17 +53,11 @@ client.on('message', (channel, context, message, self) => {
                 break;
 
             case 'age':
-                const difference = new Date() - birthday;
-                let seconds = Math.floor(difference / 1000),
-                    minutes = Math.floor(seconds / 60),
-                    hours = Math.floor(minutes / 60),
-                    days = Math.floor(hours / 24),
-                    months = Math.floor(days / 30),
-                    years = Math.floor(days / 365);
-
-                hours %= 24;
-                days %= 30;
-                months %= 12;
+                const difference = moment.preciseDiff(birthday, moment(), true);
+                const years = difference.years;
+                const months = difference.months;
+                const days = difference.days;
+                const hours = difference.hours;
 
                 client.say(
                     channel,
