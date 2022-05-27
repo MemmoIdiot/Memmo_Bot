@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "This little bot sort and show your streamlabs commands in you chat",
   "scripts": {
-    "start": "node server.js",
+    "start": "node main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Guglielmo Lischi (Memmo)",
