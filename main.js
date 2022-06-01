@@ -3,6 +3,7 @@
 require('dotenv').config();
 
 const moment = require('moment');
+const fs = require('fs');
 require('moment-precise-range-plugin');
 
 const client = new require('tmi.js').Client({
@@ -15,16 +16,43 @@ const client = new require('tmi.js').Client({
         password: process.env.TWITCH_OAUTH_TOKEN
     },
 });
+function getParagraphsFromFile(fileName) {
+    return JSON.parse(fs.readFileSync(fileName)).map((p) => {
+        return {
+            paragraph: p,
+            readingTime: 6000 * p.split(/\W+/).filter(token => token.toLowerCase().length >= 2).length / 25
+        }
+    })
+}
+function getCommandCooldown(paragraphsObj) {
+    return paragraphsObj.reduce((accumulator, item, index) => (index in [0, paragraphsObj.length - 1]) ? 0 : accumulator + item.readingTime, 0);
+}
 
-const paragraphs = JSON.parse(require('fs').readFileSync('paragraphs.json')).map((p) => {
-    return {
-        paragraph: p,
-        readingTime: 6000 * p.split(/\W+/).filter(token => token.toLowerCase().length >= 2).length / 25
+function spamParagraphs(channel, commandWorks, paragraphs, cooldown) {
+    if (commandWorks) {
+        let i = 0;
+        const job = () => {
+            const el = paragraphs[i++];
+            client.say(channel, el.paragraph);
+            if (i < paragraphs.length) {
+                setTimeout(job, el.readingTime);
+            }
+        }
+        commandWorks = false;
+        setTimeout(job, i);
+        setTimeout(() => {
+            commandWorks = true;
+        }, cooldown);
     }
-});
-const jythonCooldown = paragraphs.reduce((accumulator, item, index) => (index in [0, paragraphs.length - 1]) ? 0 : accumulator + item.readingTime, 0);
+}
+
+const jythonParagraphs = getParagraphsFromFile('paragraphs.json');
+const jythonCooldown = getCommandCooldown(jythonParagraphs);
+const kishinParagraphs = getParagraphsFromFile('kishin.json');
+const kishinCooldown = getCommandCooldown(kishinParagraphs);
 const birthday = moment('1991-05-27 13:00:00');
-let jythonWorks = true;
+let commandsWork = true;
+
 client.connect();
 
 client.on('message', (channel, context, message, self) => {
@@ -35,30 +63,22 @@ client.on('message', (channel, context, message, self) => {
         message = message.replace("!", "");
         switch (message) {
             case 'jython':
-                if (jythonWorks) {
-                    let i = 0;
-                    const job = () => {
-                        const el = paragraphs[i++];
-                        client.say(channel, el.paragraph);
-                        if (i < paragraphs.length) {
-                            setTimeout(job, el.readingTime);
-                        }
-                    }
-                    jythonWorks = false;
-                    setTimeout(job, i);
-                    setTimeout(() => {
-                        jythonWorks = true;
-                    }, jythonCooldown);
-                }
+                spamParagraphs(channel, commandsWork, jythonParagraphs, jythonCooldown);
                 break;
 
             case 'age':
-                const { years, months, days, hours } = moment.preciseDiff(birthday, moment(), true);
-                client.say(
-                    channel,
-                    `Years: ${years}${months ? `, month: ${months}` : ''}${days ? `, days: ${days}` : ''}${hours ? `, hours: ${hours}` : ''}`
-                );
+                if (commandsWork) {
+                    const { years, months, days, hours } = moment.preciseDiff(birthday, moment(), true);
+                    client.say(
+                        channel,
+                        `Years: ${years}${months ? `, month: ${months}` : ''}${days ? `, days: ${days}` : ''}${hours ? `, hours: ${hours}` : ''}`
+                    );
+                }
                 break;
+
+            case 'kishin':
+                spamParagraphs(channel, commandsWork, kishinParagraphs, kishinCooldown);
+                break
         }
     }
 });
