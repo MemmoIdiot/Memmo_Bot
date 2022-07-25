@@ -1,0 +1,7 @@
+[
+    "/me A long time ago, in a galaxy far, far away...",
+    "Okay, maybe not so long ago, unless you are thinking in terms of “web years.”",
+    "In 1995, Java was introduced into the world. At that time, it included a Graphical User Interface (GUI) framework called the Abstract Window Toolkit (AWT). ",
+    "Unfortunately, the AWT contained many native widgets that depended on the underlying operating system. It didn’t take long to realize that the AWT approach was limited, and unfortunately, unreliable. So, in 1997, the Java Foundation Classes (JFC) was introduced and included the Swing component classes.",
+    "Late in 1997, Jython was created to combine the performance provided by the Java Virtual Machine (JVM) with the elegance of Python. In so doing, the entire collection of existing Java classes were added to the ones available from Python. What this means to a software developer is that the rapid prototyping and iteration of Python can be combined with the impressive class hierarchy of Java to provide an amazing software development platform. END."
+]
